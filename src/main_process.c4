@@ -59,9 +59,20 @@ model {
         pymiere_version '1.4.1'
       }
     }
+    any_controller = script_engine 'Any VideoEditor Controller' {
+      #backend #api_integration
+      description 'Любой другой контроллер для связи с другим видеоредактором'
+      style {
+        icon tech:python
+      }
+      // link https://pypi.org/project/pymiere/
+      metadata {
+        pymiere_version '1.4.1'
+      }
+    }
   }
 
-  voice_command_api = system 'Сервер "VoiceCommandAPI Backend"' {
+  voice_command_api = system 'VoiceCommandAPI' {
     #backend #command_interpretation
     description 'Сервер для интерпретации текстовых команд с помощью LLM.'
     // link ./docs/voice_command_api_architecture.md
@@ -98,14 +109,25 @@ model {
         description 'prompts/custom.md, prompts/base.md: Markdown файлы как фолбэк.'
       }
     }
+    config_tool_nodejs = system 'Node.js Клиент Конфигурации' {
+      #configuration #planned
+      description 'Веб-интерфейс для администраторов для редактирования prompts/config.json.'
+      technology 'Node.js, Frontend Framework'
+      style {
+        icon tech:nodejs
+      } // Убедитесь, что 'tech:nodejs' поддерживается
+
+      config_gui = webapp 'Интерфейс Редактора Команд' {
+        description 'Просмотр, добавление, изменение команд и параметров.'
+      }
+    }
   }
 
-  premiere_pro_suite = system 'Adobe Premiere Pro' {
+  adobe_premiere_pro = videoeditor 'Adobe Premiere Pro' {
     #video_editing
-
-    adobe_premiere_pro = videoeditor 'Adobe Premiere Pro (ПО)' {
-      description 'Целевое ПО для видеомонтажа.'
-      // style { icon './img/premiere_pro_icon.png' } // Пример локальной иконки
+    description 'Целевое ПО для видеомонтажа.'
+    style {
+      icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/adobe-premiere-pro.svg
     }
 
     jsx_runtime = script_engine 'Среда выполнения ExtendScript (JSX)' {
@@ -115,44 +137,42 @@ model {
       description 'Плагин для исполнения команд, отправленных библиотекой pymiere.'
     }
   }
-
-  config_tool_nodejs = system 'Node.js Клиент Конфигурации' {
-    #configuration #planned
-    description 'Веб-интерфейс для администраторов для редактирования prompts/config.json.'
-    technology 'Node.js, Frontend Framework'
-    style {
-      icon tech:nodejs
-    } // Убедитесь, что 'tech:nodejs' поддерживается
-
-    config_gui = webapp 'Интерфейс Редактора Команд' {
-      description 'Просмотр, добавление, изменение команд и параметров.'
-    }
+  any_videoeditor_with_api = videoeditor 'Другой видеоредактор' {
+    #video_editing
+    description 'Любой другой видеоредактор с поддержкой API'
   }
+
+  
 
   // ----------------------------------------------------------------------
   // Отношения (Взаимодействия) - основной поток
   // ----------------------------------------------------------------------
-  user -> adobe_voice_client.gui '1. Голосовая команда / UI Interaction'
+  user -> adobe_voice_client.gui 'Голосовая команда 
+  (запись с микрофона)'
   adobe_voice_client.gui -> adobe_voice_client.speech_recognition_engine '2. Активация STT'
   adobe_voice_client.speech_recognition_engine -> adobe_voice_client.gui '3. Распознанный текст'
   adobe_voice_client.gui -> adobe_voice_client.client_backend_py '4. Текст + Метаданные'
-  adobe_voice_client.client_backend_py -> voice_command_api.rest_api '5. POST /api/generate (текст)'
+  adobe_voice_client.client_backend_py -> voice_command_api.rest_api 'POST /api/generate 
+  (текст команды пользователя)'
 
   voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '6. Загрузка config.json'
   voice_command_api.rest_api -> voice_command_api.llm_integration '7. Запрос к LLM (текст + промпт)'
   voice_command_api.llm_integration -> voice_command_api.rest_api '8. Ответ LLM (структурированный JSON)'
-  voice_command_api.rest_api -> adobe_voice_client.client_backend_py '9. Возврат JSON клиенту'
+  voice_command_api.rest_api -> adobe_voice_client.client_backend_py 'Возврат JSON с распознанынми командами видеомонтажа'
 
   adobe_voice_client.client_backend_py -> premiere_controller '10. Передача JSON исполнителю'
-  premiere_controller -> pymiere_link '11. Вызов Pymiere/JSX'
-  pymiere_link -> premiere_pro_suite.jsx_runtime '12. Выполнение jsx кода'
-  premiere_pro_suite.jsx_runtime -> premiere_pro_suite.adobe_premiere_pro '13. Выполнение действия в Adobe Premier Pro'
+  adobe_voice_client.client_backend_py -> any_controller '10. Передача JSON исполнителю'
+  any_controller -> any_videoeditor_with_api 'Выполнение команды в любой другом видеоредакторе'
+  premiere_controller -> pymiere_link 'Выполнение команды в Adobe Premier Pro'
+  pymiere_link -> jsx_runtime '12. Выполнение jsx кода'
+  //jsx_runtime -> adobe_premiere_pro '13. Выполнение действия в Adobe Premier Pro'
   // Неявная связь: пользователь видит результат в Premiere Pro
-  // premiere_pro_suite.adobe_premiere_pro -> user '13. Результат виден'
+  // adobe_premiere_pro.adobe_premiere_pro -> user '13. Результат виден'
 
   // Отношения - поток конфигурации
-  config_manager -> config_tool_nodejs.config_gui '1. Редактирование команд'
-  config_tool_nodejs.config_gui -> voice_command_api.rest_api '2. POST /api/prompt (сохранение)'
+  config_manager -> config_tool_nodejs.config_gui 'Работа с редактором команд'
+  config_tool_nodejs.config_gui -> voice_command_api.rest_api 'POST /api/prompt
+   (сохранение обновлённого промпта)'
   voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '3. Обновление config.json'
 
 
@@ -185,7 +205,7 @@ views {
     }
   }
 
-  view premiere_pro_integration_context of premiere_pro_suite {
+  view premiere_pro_integration_context of adobe_premiere_pro {
     title 'Контекст: Интеграция с Adobe Premiere Pro'
     description 'Компоненты, отвечающие за выполнение команд в видеоредакторе.'
     include *, adobe_voice_client.client_backend_py
@@ -231,17 +251,17 @@ views {
     adobe_voice_client.client_backend_py -> premiere_controller '7. Передача команды исполнителю (premiere_controller.py)' {
       notes 'main.py вызывает функции в premiere_controller.py.'
     }
-    premiere_controller -> premiere_pro_suite.adobe_premiere_pro '8. Выполнение команды в Adobe Premiere Pro' {
+    premiere_controller -> adobe_premiere_pro '8. Выполнение команды в Adobe Premiere Pro' {
       notes 'premiere_controller.py использует Pymiere и/или JSX для взаимодействия с Premiere Pro.'
     }
-    // premiere_pro_suite.adobe_premiere_pro -> user '9. Результат виден пользователю' // Неявная обратная связь
+    // adobe_premiere_pro.adobe_premiere_pro -> user '9. Результат виден пользователю' // Неявная обратная связь
 
-    include user, adobe_voice_client, adobe_voice_client.*, voice_command_api, voice_command_api.*, premiere_pro_suite, premiere_pro_suite.*
+    include user, adobe_voice_client, adobe_voice_client.*, voice_command_api, voice_command_api.*, adobe_premiere_pro, adobe_premiere_pro.*
     // Можно добавить стили для выделения основного потока, как в вашем примере
-    style user, adobe_voice_client.gui, adobe_voice_client.client_backend_py, voice_command_api.rest_api, premiere_controller, premiere_pro_suite.adobe_premiere_pro {
+    style user, adobe_voice_client.gui, adobe_voice_client.client_backend_py, voice_command_api.rest_api, premiere_controller, adobe_premiere_pro {
       color green // Пример выделения элементов потока
     }
-    style adobe_voice_client.speech_recognition_engine, voice_command_api.prompt_management, voice_command_api.llm_integration, premiere_pro_suite.jsx_runtime {
+    style adobe_voice_client.speech_recognition_engine, voice_command_api.prompt_management, voice_command_api.llm_integration, adobe_premiere_pro.jsx_runtime {
       opacity 70% // Вспомогательные элементы менее яркие
       color secondary
     }
