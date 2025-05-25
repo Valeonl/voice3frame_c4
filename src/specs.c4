@@ -1,0 +1,143 @@
+specification {
+  element actor {
+    notation "Действующее лицо / Пользователь" // Русское обозначение
+    style {
+      shape person
+      color secondary
+    }
+  }
+
+  element system {
+    notation "Программная Система" // Русское обозначение
+    style {
+      shape rectangle
+      opacity 70%
+      color gray
+      border solid
+    }
+  }
+  element videoeditor {
+    notation "Видеоредактор" // Русское обозначение
+    style {
+      shape rectangle
+      opacity 70%
+      color gray
+      border solid
+      icon appsmith-dark-logo.svg
+    }
+  }
+
+  element external_system {
+    notation "Внешняя Система" // Русское обозначение
+    style {
+      shape rectangle
+      color secondary
+      opacity 70%
+      border dashed
+    }
+  }
+
+  element component {
+    notation "Компонент Системы" // Русское обозначение
+    style {
+      shape rectangle
+      opacity 80%
+      color sky
+      border solid
+    }
+  }
+
+  element service {
+    notation "Сервис / API" // Русское обозначение
+    style {
+      shape rectangle // Оставляем rectangle для совместимости, hexagon может не везде работать
+      color blue
+      border solid
+    }
+  }
+
+  element webapp {
+    notation "Веб-Приложение / Фронтенд" // Русское обозначение
+    style {
+      shape browser
+      color slate
+      border solid
+    }
+  }
+
+  element library {
+    notation "Библиотека / Фреймворк" // Русское обозначение
+    style {
+      shape rectangle // 'folder' не всегда стандартный
+      color indigo
+      border solid
+    }
+  }
+
+  element script_engine {
+    notation "Скриптовый Движок / Среда Выполнения" // Русское обозначение
+    style {
+      shape rectangle
+      color red
+      border solid
+    }
+  }
+
+  element storage {
+    notation "Хранилище Данных" // Русское обозначение
+    style {
+      shape cylinder
+      color muted
+      border solid
+    }
+  }
+
+  element config_file {
+    notation "Файл Конфигурации" // Русское обозначение
+    style {
+      shape rectangle // 'document' не всегда стандартный
+      color gray
+      border solid
+    }
+  }
+
+  // Теги (остаются на английском, так как это идентификаторы)
+  tag backend
+  tag frontend
+  tag voice_recognition
+  tag command_interpretation
+  tag video_editing
+  tag api_integration
+  tag configuration
+  tag beta
+  tag planned
+  tag user_interaction
+  tag data_processing
+  tag external_dependency
+
+  // Отношения (определения стилей для отношений, если нужны кастомные)
+  // relationship voice_command {
+  //   notation "Голосовая команда (связь)" // Можно добавить русскую нотацию для типа связи
+  //   style {
+  //     label "Голосовая команда" // Метка на диаграмме
+  //     color red
+  //     line dashed
+  //   }
+  // }
+  // relationship data_flow {
+  //   notation "Поток данных (связь)"
+  //   style {
+  //     label "Поток данных"
+  //     color blue
+  //     line solid
+  //   }
+  // }
+  // relationship control_flow {
+  //   notation "Поток управления (связь)"
+  //   style {
+  //     label "Поток управления"
+  //     color green
+  //     line dotted
+  //   }
+  // }
+}

@@ -1,0 +1,274 @@
+model {
+  // ----------------------------------------------------------------------
+  // Акторы
+  // ----------------------------------------------------------------------
+  user = actor 'Пользователь' {
+    description 'Человек, управляющий видеомонтажом с помощью голосовых команд.'
+    // link ./docs/user_personas.md#novice_editor // Пример относительной ссылки
+  }
+
+  config_manager = actor 'Администратор системы' {
+    description 'Отвечает за настройку и расширение списка команд, примеров их использования и системных промптов для LLM.'
+    style {
+
+    } // Убедитесь, что 'tech:github' поддерживается или замените
+    // link ./docs/system_configuration_guide.md
+  }
+
+  // ----------------------------------------------------------------------
+  // Основные Системы и Компоненты
+  // ----------------------------------------------------------------------
+  adobe_voice_client = system 'Adobe Voice' {
+    #frontend #user_interaction
+    description 'Десктопное веб-приложение для голосового ввода и первичного распознавания речи.'
+    // link ./docs/adobe_voice_client_architecture.md
+
+    gui = webapp 'HTML, CSS, JS Frontend' {
+      technology 'HTML, CSS, JavaScript, Eel'
+      description 'Интерфейс: кнопки, поле транскрипции, индикатор громкости. Скрипты: ui-controls.js, hotkeys.js, etc.'
+      style {
+        icon tech:html5
+      } // Убедитесь, что 'tech:html5' поддерживается
+    }
+
+    speech_recognition_engine = component 'Web Speech API' {
+      #voice_recognition
+      technology 'Web Speech API'
+      description 'Транскрибация речи пользователя. Преобразует аудио в текст. Логика в recognition.js.'
+      link https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API // Пример внешней ссылки
+    }
+
+    client_backend_py = script_engine 'Python Backend' {
+      #backend #data_processing
+      style {
+        icon tech:python
+      }
+      technology 'Python, Eel Library'
+      description 'main.py: Управляет Eel, принимает текст от JS, формирует HTTP POST на VoiceCommandAPI.'
+      // link https://github.com/python-eel/Eel
+    }
+    premiere_controller = script_engine 'PremiereController' {
+      #backend #api_integration
+      technology 'Python, Pymiere Library'
+      description 'premiere_controller.py: Получает JSON, парсит, вызывает Pymiere/JSX. Поддерживает эмуляцию.'
+      style {
+        icon tech:python
+      }
+      // link https://pypi.org/project/pymiere/
+      metadata {
+        pymiere_version '1.4.1'
+      }
+    }
+  }
+
+  voice_command_api = system 'Сервер "VoiceCommandAPI Backend"' {
+    #backend #command_interpretation
+    description 'Сервер для интерпретации текстовых команд с помощью LLM.'
+    // link ./docs/voice_command_api_architecture.md
+    metadata {
+      version: '1.1.0'
+      deployed_on 'localhost:5000'
+    }
+
+    rest_api = service 'Flask REST API' {
+      #api_integration
+      technology 'Python, Flask'
+      description 'app.py: Эндпоинты /api/generate и /api/prompt.'
+      style {
+        icon tech:python
+      } // Убедитесь, что 'tech:python' поддерживается
+    }
+
+    llm_integration = component 'Интеграция с LLM' {
+      #api_integration #external_dependency
+      technology 'Google Gemini API'
+      description 'Взаимодействие с Google Gemini для NLU.'
+      // link https://ai.google.dev/models/gemini
+    }
+
+    prompt_management = component 'Управление Промптами' {
+      #configuration #data_processing
+      description 'Загрузка, генерация и хранение системных промптов.'
+
+      prompt_config = config_file 'Конфигурация Промптов' {
+        description 'prompts/config.json: Роль LLM, команды, параметры, примеры, promptText.'
+        // link ./examples/config.example.json
+      }
+      fallback_prompts = config_file 'Резервные Промпты' {
+        description 'prompts/custom.md, prompts/base.md: Markdown файлы как фолбэк.'
+      }
+    }
+  }
+
+  premiere_pro_suite = system 'Adobe Premiere Pro' {
+    #video_editing
+
+    adobe_premiere_pro = videoeditor 'Adobe Premiere Pro (ПО)' {
+      description 'Целевое ПО для видеомонтажа.'
+      // style { icon './img/premiere_pro_icon.png' } // Пример локальной иконки
+    }
+
+    jsx_runtime = script_engine 'Среда выполнения ExtendScript (JSX)' {
+      description 'Встроенный в Premiere Pro движок для скриптов.'
+    }
+    pymiere_link = script_engine 'Плагин pymiere link' {
+      description 'Плагин для исполнения команд, отправленных библиотекой pymiere.'
+    }
+  }
+
+  config_tool_nodejs = system 'Node.js Клиент Конфигурации' {
+    #configuration #planned
+    description 'Веб-интерфейс для администраторов для редактирования prompts/config.json.'
+    technology 'Node.js, Frontend Framework'
+    style {
+      icon tech:nodejs
+    } // Убедитесь, что 'tech:nodejs' поддерживается
+
+    config_gui = webapp 'Интерфейс Редактора Команд' {
+      description 'Просмотр, добавление, изменение команд и параметров.'
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // Отношения (Взаимодействия) - основной поток
+  // ----------------------------------------------------------------------
+  user -> adobe_voice_client.gui '1. Голосовая команда / UI Interaction'
+  adobe_voice_client.gui -> adobe_voice_client.speech_recognition_engine '2. Активация STT'
+  adobe_voice_client.speech_recognition_engine -> adobe_voice_client.gui '3. Распознанный текст'
+  adobe_voice_client.gui -> adobe_voice_client.client_backend_py '4. Текст + Метаданные'
+  adobe_voice_client.client_backend_py -> voice_command_api.rest_api '5. POST /api/generate (текст)'
+
+  voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '6. Загрузка config.json'
+  voice_command_api.rest_api -> voice_command_api.llm_integration '7. Запрос к LLM (текст + промпт)'
+  voice_command_api.llm_integration -> voice_command_api.rest_api '8. Ответ LLM (структурированный JSON)'
+  voice_command_api.rest_api -> adobe_voice_client.client_backend_py '9. Возврат JSON клиенту'
+
+  adobe_voice_client.client_backend_py -> premiere_controller '10. Передача JSON исполнителю'
+  premiere_controller -> pymiere_link '11. Вызов Pymiere/JSX'
+  pymiere_link -> premiere_pro_suite.jsx_runtime '12. Выполнение jsx кода'
+  premiere_pro_suite.jsx_runtime -> premiere_pro_suite.adobe_premiere_pro '13. Выполнение действия в Adobe Premier Pro'
+  // Неявная связь: пользователь видит результат в Premiere Pro
+  // premiere_pro_suite.adobe_premiere_pro -> user '13. Результат виден'
+
+  // Отношения - поток конфигурации
+  config_manager -> config_tool_nodejs.config_gui '1. Редактирование команд'
+  config_tool_nodejs.config_gui -> voice_command_api.rest_api '2. POST /api/prompt (сохранение)'
+  voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '3. Обновление config.json'
+
+
+}
+// ----------------------------------------------------------------------
+// Представления (Views)
+// ----------------------------------------------------------------------
+views {
+  view index {
+    title 'Архитектура системы голосового управления процессом видеомонтажа'
+    description 'Все основные системы и их ключевые взаимодействия.'
+    include *
+  }
+
+  view adobe_voice_client_context of adobe_voice_client {
+    title 'Контекст: Клиент "Adobe Voice"'
+    description 'Внутренняя структура и внешние взаимодействия клиента.'
+    include *, user, voice_command_api.rest_api, premiere_controller
+    style user, voice_command_api.rest_api, premiere_controller {
+      color gray
+    }
+  }
+
+  view voice_command_api_context of voice_command_api {
+    title 'Контекст: Сервер "VoiceCommandAPI Backend"'
+    description 'Внутренняя структура и зависимости сервера интерпретации команд.'
+    include *, adobe_voice_client.client_backend_py, config_tool_nodejs.config_gui
+    style adobe_voice_client.client_backend_py, config_tool_nodejs.config_gui {
+      color gray
+    }
+  }
+
+  view premiere_pro_integration_context of premiere_pro_suite {
+    title 'Контекст: Интеграция с Adobe Premiere Pro'
+    description 'Компоненты, отвечающие за выполнение команд в видеоредакторе.'
+    include *, adobe_voice_client.client_backend_py
+    style adobe_voice_client.client_backend_py {
+      color gray
+    }
+  }
+
+  // Динамическое представление: Основной сценарий обработки команды
+  dynamic view main_command_flow {
+    title 'Сценарий: Обработка голосовой команды'
+    description 'Последовательность обработки голосовой команды.'
+
+    user -> adobe_voice_client.gui '1. Пользователь дает команду' {
+      notes 'Пользователь нажимает кнопку микрофона (или горячую клавишу) и произносит команду.'
+    }
+    adobe_voice_client.gui -> adobe_voice_client.speech_recognition_engine '2. Распознавание речи (STT)' {
+      notes 'Web Speech API преобразует аудио в текст.'
+    }
+    adobe_voice_client.speech_recognition_engine -> adobe_voice_client.client_backend_py '3. Текст команды передан на клиентский бэкенд (main.py)' {
+      notes 'Вместе с текстом могут передаваться метаданные (время записи и т.д.).'
+    }
+    adobe_voice_client.client_backend_py -> voice_command_api.rest_api '4. Запрос на интерпретацию (/api/generate)' {
+      notes 'main.py отправляет HTTP POST с текстом команды на сервер VoiceCommandAPI.'
+    }
+    //'Интерпретация команды на сервере VoiceCommandAPI' 
+    parallel {
+
+      voice_command_api.rest_api -> voice_command_api.prompt_management '5.1. Загрузка/Формирование системного промпта' {
+        notes 'На основе prompts/config.json или резервных файлов.'
+      }
+      // voice_command_api.prompt_management -> voice_command_api.rest_api 'Промпт готов' // (опционально)
+      voice_command_api.rest_api -> voice_command_api.llm_integration '5.2. Запрос к Google Gemini' {
+        notes 'Текст пользователя + системный промпт отправляются в LLM.'
+      }
+      voice_command_api.llm_integration -> voice_command_api.rest_api '5.3. Получение структурированного JSON от LLM' {
+        notes 'Ответ содержит распознанную команду, параметры и уверенность.'
+      }
+    }
+    voice_command_api.rest_api -> adobe_voice_client.client_backend_py '6. Структурированная команда возвращена клиенту (main.py)' {
+      notes 'JSON-ответ от VoiceCommandAPI.'
+    }
+    adobe_voice_client.client_backend_py -> premiere_controller '7. Передача команды исполнителю (premiere_controller.py)' {
+      notes 'main.py вызывает функции в premiere_controller.py.'
+    }
+    premiere_controller -> premiere_pro_suite.adobe_premiere_pro '8. Выполнение команды в Adobe Premiere Pro' {
+      notes 'premiere_controller.py использует Pymiere и/или JSX для взаимодействия с Premiere Pro.'
+    }
+    // premiere_pro_suite.adobe_premiere_pro -> user '9. Результат виден пользователю' // Неявная обратная связь
+
+    include user, adobe_voice_client, adobe_voice_client.*, voice_command_api, voice_command_api.*, premiere_pro_suite, premiere_pro_suite.*
+    // Можно добавить стили для выделения основного потока, как в вашем примере
+    style user, adobe_voice_client.gui, adobe_voice_client.client_backend_py, voice_command_api.rest_api, premiere_controller, premiere_pro_suite.adobe_premiere_pro {
+      color green // Пример выделения элементов потока
+    }
+    style adobe_voice_client.speech_recognition_engine, voice_command_api.prompt_management, voice_command_api.llm_integration, premiere_pro_suite.jsx_runtime {
+      opacity 70% // Вспомогательные элементы менее яркие
+      color secondary
+    }
+  }
+
+  // Динамическое представление: Сценарий конфигурации
+  dynamic view configuration_scenario {
+    title 'Сценарий: Конфигурация Команд Системы'
+    description 'Показывает, как Администратор обновляет конфигурацию команд через Node.js клиент (или другой инструмент).'
+
+    config_manager -> config_tool_nodejs.config_gui '1. Администратор открывает редактор команд и вносит изменения' {
+      notes 'Изменения касаются файла prompts/config.json: добавление новых команд, изменение параметров, примеров формулировок.'
+    }
+    config_tool_nodejs.config_gui -> voice_command_api.rest_api '2. Отправка обновленной конфигурации на сервер (/api/prompt)' {
+      notes 'Веб-интерфейс отправляет HTTP POST с новым содержимым config.json (или его частью).'
+    }
+    voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '3. Сохранение изменений в файле prompts/config.json на сервере' {
+      notes 'Сервер перезаписывает или обновляет файл конфигурации.'
+    }
+    // Опциональные шаги обратной связи
+    // voice_command_api.prompt_management.prompt_config -> voice_command_api.rest_api '4. Подтверждение сохранения файла'
+    // voice_command_api.rest_api -> config_tool_nodejs.config_gui '5. Статус операции (успех/ошибка) отображается в редакторе'
+    // config_tool_nodejs.config_gui -> config_manager '6. Администратор видит результат операции'
+
+    include config_manager, config_tool_nodejs.*, voice_command_api.rest_api, voice_command_api.prompt_management.prompt_config
+    style config_manager, config_tool_nodejs.config_gui, voice_command_api.rest_api, voice_command_api.prompt_management.prompt_config {
+      color green
+    }
+  }
+}
