@@ -28,4 +28,4 @@
 [https://github.com/Valeonl/voice3frame](https://github.com/Valeonl/voice3frame)
 
 ## Просмотр диаграмм
-Интерактивные диаграммы можно посмотреть здесь: `[https://valeonl.github.io/voice3frame_c4/view/index/](https://valeonl.github.io/voice3frame_c4/view/index/)`
+Интерактивные диаграммы можно посмотреть здесь: [https://valeonl.github.io/voice3frame_c4/view/index/](https://valeonl.github.io/voice3frame_c4/view/index/)
