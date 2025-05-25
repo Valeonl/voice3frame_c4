@@ -21,6 +21,10 @@ model {
   adobe_voice_client = system 'Adobe Voice' {
     #frontend #user_interaction
     description 'Десктопное веб-приложение для голосового ввода и первичного распознавания речи.'
+    style {
+      icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/adobe-voice.svg
+      color primary
+    }
     // link ./docs/adobe_voice_client_architecture.md
 
     gui = webapp 'HTML, CSS, JS Frontend' {
@@ -75,6 +79,10 @@ model {
   voice_command_api = system 'VoiceCommandAPI' {
     #backend #command_interpretation
     description 'Сервер для интерпретации текстовых команд с помощью LLM.'
+    style {
+      icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/voice-command-api.svg
+      color primary
+    }
     // link ./docs/voice_command_api_architecture.md
     metadata {
       version: '1.1.0'
@@ -128,6 +136,7 @@ model {
     description 'Целевое ПО для видеомонтажа.'
     style {
       icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/adobe-premiere-pro.svg
+      color primary
     }
 
     jsx_runtime = script_engine 'Среда выполнения ExtendScript (JSX)' {

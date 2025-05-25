@@ -1,68 +1,31 @@
-# LikeC4 Template
+# Архитектурные Диаграммы для Voice3Frame (LikeC4)
 
-This template is a simple example of how to use LikeC4.  
-Contains:
+Этот репозиторий содержит исходные файлы для построения архитектурных диаграмм системы **Voice3Frame** с использованием инструмента [LikeC4](https://likec4.dev/).
 
-- LikeC4 sources ([`/src`](./src/))
-- Deploy to github pages ([`pages.yml`](./.github/workflows/pages.yml))
+## Назначение репозитория
 
-Demo - [https://template.likec4.dev](https://template.likec4.dev/view/cloud)
+Основная цель данного репозитория — централизованное хранение и управление моделями архитектуры проекта `voice3frame`. Созданные здесь диаграммы предназначены для:
 
-Try it online:
+*   Визуализации структуры и взаимодействия компонентов системы `voice3frame`.
+*   Встраивания в документацию и на веб-сайт, описывающий архитектуру проекта `voice3frame`.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/likec4/template?file=src%2Fmodel.c4&initialpath=%2Fview%2Findex)
+Эти диаграммы помогают лучше понять, как устроена система голосового управления видеомонтажом, и облегчают её обсуждение и развитие.
 
-> StackBlitz does not support extensions, so do not expect validation, syntax highlighting and other features in likec4 files.  
-> Try this template online with [github.dev](https://github.dev/likec4/template/blob/main/src/model.c4) and install extension.
+## Структура модели
 
-## How-to
+Модель архитектуры описана в файлах `.c4` в директории [`/src`](./src/):
 
-1. Create a new repository from this template
-2. Pull your repository and open in VSCode
-3. Install suggested [LikeC4 extension](https://marketplace.visualstudio.com/items?itemName=likec4.likec4)
+*   `main_process.c4`: Содержит описание элементов системы, их взаимосвязей и различных представлений (views), таких как общая архитектура, контексты отдельных компонентов и сценарии взаимодействия.
+*   `specs.c4`: Определяет стили и обозначения (нотации) для элементов, используемых на диаграммах.
 
-Now you can edit likec4 sources, refactor, navigate and preview diagrams.
+## Связь с основным проектом
 
-### CLI
+Диаграммы, созданные в этом репозитории, являются частью документации основного проекта **Voice3Frame**.
 
-You can install globally, locally and use scripts from `package.json`, or just via `npx`  
-Check [how to install likec4](https://github.com/likec4/likec4/tree/main/packages/likec4#install)  
+[![Перейти к репозиторию Voice3Frame](https://img.shields.io/badge/GitHub-Voice3Frame_Проект-blue?style=for-the-badge&logo=github)](https://github.com/Valeonl/voice3frame)
 
-> LikeC4 requires Node.js version 18+, 20+  
+**Ссылка на основной репозиторий проекта Voice3Frame:**  
+[https://github.com/Valeonl/voice3frame](https://github.com/Valeonl/voice3frame)
 
-To start local server with live reload (for development or quick preview)  
-Inside the project folder:
-
-```bash
-npx likec4 start
-```
-
-Export to PNG:
-
-```bash
-npx likec4 export png -o png
-```
-
-Documentation: https://likec4.dev/docs/tools/cli/
-
-### Deployment
-
-Deployment is the same as for any project built with [vite](https://vitejs.dev/).
-
-1. Build static site (export to HTML, ready for deployment):
-
-```bash
-npx likec4 build -o ./dist
-```
-> Check `npx likec4 build --help` for options and examples
-
-2. Upload `./dist` folder to your hosting
-
-#### Github Pages
-
-This template contains workflow to deploy to github pages on every push to `main` branch.  
-Check [`.github/workflows/pages.yml`](./.github/workflows/pages.yml)
-
-## License
-
-This project is released under the [MIT License](LICENSE)
+## Просмотр диаграмм
+Интерактивные диаграммы можно посмотреть здесь: `[https://valeonl.github.io/voice3frame_c4/view/index/](https://valeonl.github.io/voice3frame_c4/view/index/)`
