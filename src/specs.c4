@@ -23,7 +23,7 @@ specification {
       opacity 70%
       color gray
       border solid
-      icon appsmith-dark-logo.svg
+      icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/appsmith.svg
     }
   }
 
