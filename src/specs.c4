@@ -33,7 +33,7 @@ specification {
       opacity 70%
       color green
       border solid
-      icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/gemini.png
+      icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/gemini-modified.png
     }
   }
 

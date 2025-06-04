@@ -76,10 +76,10 @@ model {
     }
   }
   gemini = llm 'Gemini 2.0 Flash' {
-    description 'LLM-большая языковая модель'
+    description 'LLM (большая языковая модель) от Google'
   }
-  other_llm = llm 'Другая LLM' {
-    description 'LLM-большая языковая модель'
+  other_llm = llm 'Любая другая LLM' {
+    description 'Любая другая LLM с достаточным качеством ответов и следованию промпту'
     style {
       icon gcp:advanced-solutions-lab
       color amber
@@ -165,31 +165,33 @@ model {
   // ----------------------------------------------------------------------
   // Отношения (Взаимодействия) - основной поток
   // ----------------------------------------------------------------------
-  user -> adobe_voice_client.gui 'Голосовая команда 
+  user -> adobe_voice_client.gui '1. Голосовая команда 
   (запись с микрофона)'
   adobe_voice_client.gui -> adobe_voice_client.speech_recognition_engine '2. Активация STT'
   adobe_voice_client.speech_recognition_engine -> adobe_voice_client.gui '3. Распознанный текст'
   adobe_voice_client.gui -> adobe_voice_client.client_backend_py '4. Текст + Метаданные'
-  adobe_voice_client.client_backend_py -> voice_command_api.rest_api 'POST /api/generate 
+  adobe_voice_client.client_backend_py -> voice_command_api.rest_api '2. POST /api/generate 
   (текст команды пользователя)'
 
   voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '6. Загрузка config.json'
   voice_command_api.rest_api -> voice_command_api.llm_integration 'Запрос к LLM (текст + промпт)'
-  voice_command_api.llm_integration -> gemini 'Запрос к LLM (текст + промпт)'
-  gemini -> voice_command_api.rest_api 'Ответ LLM (структурированный JSON с распознанными командами)'
-  voice_command_api.rest_api -> adobe_voice_client.client_backend_py 'Возврат JSON с распознанынми командами видеомонтажа'
+  voice_command_api.llm_integration -> gemini '3. Запрос к LLM (текст + промпт)'
+  gemini -> voice_command_api.rest_api '4.Ответ LLM (структурированный JSON с распознанными командами)'
+  voice_command_api.llm_integration -> other_llm '3.* Запрос к любой другой LLM (текст + промпт)'
+  other_llm -> voice_command_api.rest_api '4.* Ответ другой LLM (структурированный JSON с распознанными командами)'
+  voice_command_api.rest_api -> adobe_voice_client.client_backend_py '5. Возврат JSON с распознанными командами видеомонтажа'
 
   adobe_voice_client.client_backend_py -> premiere_controller '10. Передача JSON исполнителю'
   adobe_voice_client.client_backend_py -> any_controller '10. Передача JSON исполнителю'
-  any_controller -> any_videoeditor_with_api 'Выполнение команды в любой другом видеоредакторе'
-  premiere_controller -> pymiere_link 'Выполнение команды в Adobe Premier Pro'
+  any_controller -> any_videoeditor_with_api '6.* Выполнение команды в любой другом видеоредакторе'
+  premiere_controller -> pymiere_link '6. Выполнение команды в Adobe Premier Pro'
   pymiere_link -> jsx_runtime '12. Выполнение jsx кода'
   //jsx_runtime -> adobe_premiere_pro '13. Выполнение действия в Adobe Premier Pro'
   // Неявная связь: пользователь видит результат в Premiere Pro
   // adobe_premiere_pro.adobe_premiere_pro -> user '13. Результат виден'
 
   // Отношения - поток конфигурации
-  config_manager -> config_tool_nodejs.config_gui 'Работа с редактором команд'
+  config_manager -> config_tool_nodejs.config_gui '* Работа с редактором команд'
   config_tool_nodejs.config_gui -> voice_command_api.rest_api 'POST /api/prompt
    (сохранение обновлённого промпта)'
   voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '3. Обновление config.json'
