@@ -75,7 +75,16 @@ model {
       }
     }
   }
-
+  gemini = llm 'Gemini 2.0 Flash' {
+    description 'LLM-большая языковая модель'
+  }
+  other_llm = llm 'Другая LLM' {
+    description 'LLM-большая языковая модель'
+    style {
+      icon gcp:aiplatform
+      color primary
+    }
+  }
   voice_command_api = system 'VoiceCommandAPI' {
     #backend #command_interpretation
     description 'Сервер для интерпретации текстовых команд с помощью LLM.'
@@ -165,8 +174,9 @@ model {
   (текст команды пользователя)'
 
   voice_command_api.rest_api -> voice_command_api.prompt_management.prompt_config '6. Загрузка config.json'
-  voice_command_api.rest_api -> voice_command_api.llm_integration '7. Запрос к LLM (текст + промпт)'
-  voice_command_api.llm_integration -> voice_command_api.rest_api '8. Ответ LLM (структурированный JSON)'
+  voice_command_api.rest_api -> voice_command_api.llm_integration 'Запрос к LLM (текст + промпт)'
+  voice_command_api.llm_integration -> gemini 'Запрос к LLM (текст + промпт)'
+  gemini -> voice_command_api.rest_api 'Ответ LLM (структурированный JSON с распознанными командами)'
   voice_command_api.rest_api -> adobe_voice_client.client_backend_py 'Возврат JSON с распознанынми командами видеомонтажа'
 
   adobe_voice_client.client_backend_py -> premiere_controller '10. Передача JSON исполнителю'
@@ -197,7 +207,7 @@ views {
   }
 
   view adobe_voice_client_context of adobe_voice_client {
-    title 'Контекст: Клиент "Adobe Voice"'
+    title 'Контекст: Клиент Adobe Voice'
     description 'Внутренняя структура и внешние взаимодействия клиента.'
     include *, user, voice_command_api.rest_api, premiere_controller
     style user, voice_command_api.rest_api, premiere_controller {
@@ -206,7 +216,7 @@ views {
   }
 
   view voice_command_api_context of voice_command_api {
-    title 'Контекст: Сервер "VoiceCommandAPI Backend"'
+    title 'Контекст: Сервер VoiceCommandAPI Backend'
     description 'Внутренняя структура и зависимости сервера интерпретации команд.'
     include *, adobe_voice_client.client_backend_py, config_tool_nodejs.config_gui
     style adobe_voice_client.client_backend_py, config_tool_nodejs.config_gui {

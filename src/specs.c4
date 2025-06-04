@@ -26,6 +26,16 @@ specification {
       icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/videoeditor.svg
     }
   }
+  element llm {
+    notation "LLM-модель"
+    style {
+      shape rectangle
+      opacity 70%
+      color gray
+      border solid
+      icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/gemini.png
+    }
+  }
 
   element external_system {
     notation "Внешняя Система" // Русское обозначение
