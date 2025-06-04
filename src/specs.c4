@@ -31,7 +31,7 @@ specification {
     style {
       shape rectangle
       opacity 70%
-      color gray
+      color green
       border solid
       icon https://raw.githubusercontent.com/Valeonl/voice3frame_c4/refs/heads/main/icons/gemini.png
     }

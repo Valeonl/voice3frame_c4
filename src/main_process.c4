@@ -81,8 +81,8 @@ model {
   other_llm = llm 'Другая LLM' {
     description 'LLM-большая языковая модель'
     style {
-      icon gcp:aiplatform
-      color primary
+      icon gcp:advanced-solutions-lab
+      color amber
     }
   }
   voice_command_api = system 'VoiceCommandAPI' {
